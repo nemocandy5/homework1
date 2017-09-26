@@ -6,6 +6,7 @@
 
 ## updates
 - 9/26/2017: provide [subset of dataset](https://drive.google.com/drive/folders/0B3fKFm-j0RqeWGdXZUNRUkpybU0?usp=sharing), separated into train/test set
+- 9/27/2017: in this homework, we only evaluat the performance of object classification. You can use other label for multi-task learning, etc.
 
 ## Brief
 * ***+2 extra credit of the whole semester***
