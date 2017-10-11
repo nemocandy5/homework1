@@ -4,41 +4,40 @@
 
 ## Overview
 The project is related to 
-> quote
+> Using VGG-16 network to implement this project. The classification task we want to do is object categories.
 
 
 ## Implementation
-1. One
-	* item
-	* item
-2. Two
+1. load data
+	* I writed in data_loader.py
+	* The data size is large, so I resize the data and named dataset. Because this homework just want to classify the object captured by HandCam, 
+ some images we won't use. So we can take them off.
+2. train with VGG-16 network
+	* I writed in train_vgg_16.py
+	* I download the pre-trained model of VGG-16 (vgg_16.ckpt) to use. I remove the last fully connected layer and replace it with our own.
+The output size is 24 (object categories).
+	* Then we want to fine-tune the entire model.
 
-```
-Code highlights
-```
 
 ## Installation
-* Other required packages.
-* How to compile from source?
+* tensorflow
+* tensorflow.contrib.slim
+* numpy
+* tqdm
+* >> python train_vgg_16.py
 
 ### Results
 
 <table border=1>
 <tr>
 <td>
-<img src="placeholder.jpg" width="24%"/>
-<img src="placeholder.jpg"  width="24%"/>
-<img src="placeholder.jpg" width="24%"/>
-<img src="placeholder.jpg" width="24%"/>
+After training and testing, the testing accuracy is 0.6090325610519725.
 </td>
 </tr>
 
 <tr>
 <td>
-<img src="placeholder.jpg" width="24%"/>
-<img src="placeholder.jpg"  width="24%"/>
-<img src="placeholder.jpg" width="24%"/>
-<img src="placeholder.jpg" width="24%"/>
+<img src="results/results.png" alt="results" style="float:middle;">
 </td>
 </tr>
 
