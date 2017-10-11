@@ -24,7 +24,6 @@ The output size is 24 (object categories).
 * tensorflow.contrib.slim
 * numpy
 * tqdm
-* >> python train_vgg_16.py
 
 ### Results
 
