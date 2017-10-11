@@ -1,4 +1,4 @@
-# Your Name <span style="color:red">(id)</span>
+# 靳文綺 <span style="color:red">(106062563)</span>
 
 #Project 5: Deep Classification
 
@@ -30,15 +30,15 @@ The output size is 24 (object categories).
 
 <table border=1>
 <tr>
-<td>
+
 After training and testing, the testing accuracy is 0.6090325610519725.
-</td>
+
 </tr>
 
 <tr>
-<td>
-<img src="results/results.png" alt="results" style="float:middle;">
-</td>
+
+<img src="results.png" alt="results" style="float:middle;">
+
 </tr>
 
 </table>
