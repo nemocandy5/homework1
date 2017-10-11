@@ -9,7 +9,7 @@ The project is related to
 
 ## Implementation
 1. load data
-	* I writed in data_loader.py
+	* I wrote in data_loader.py
 	* The data size is large, so I resize the data and named dataset. Because this homework just want to classify the object captured by HandCam, 
  some images we won't use. So we can take them off.
 2. train with VGG-16 network
