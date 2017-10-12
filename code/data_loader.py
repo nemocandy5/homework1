@@ -1,14 +1,50 @@
-import re
 import os
 import sys
 import numpy as np
 
-def load_image_paths(image_folder_path='dataset/frames/', 
-                     data_type='train',
-                     label_type='obj',
-                     image_type = 'left'):
+def load_data(image_folder='dataset/frames/', label_folder='dataset/labels', label_type='obj', left_right=['left', 'right'], with_head=False, ratio=0.2):
     
-    # Re-format to pre-defined folder names.
+    train_head_image_paths, train_hand_image_paths, train_labels, val_head_image_paths, val_hand_image_paths, val_labels, test_head_image_paths, test_hand_image_paths, test_labels = [], [], np.array([])
+    
+    # training data
+    for x in left_right:
+        if with_head=True:
+            _head_image_paths, _hand_image_paths, _labels = load_examples(image_folder=image_folder, label_folder=label_folder, data_type='train', label_type=label_type, hand_type=hand_type, with_head=True)
+            _train_head_image_paths, _val_head_image_paths, _, _ = split(_head_image_paths, _labels, test_size=ratio)
+                
+            train_head_image_paths += _train_head_image_paths
+            val_head_image_paths += _val_head_image_paths  
+        else:
+            _hand_image_paths, _labels = load_examples(image_folder=image_folder, label_folder=label_folder, data_type='train', label_type=label_type, hand_type=hand_type, with_head=False)
+        
+        _train_hand_image_paths, _val_hand_image_paths, _train_labels, _val_labels = split(_hand_image_paths, _labels, test_size=ratio)
+        train_hand_image_paths += _train_hand_image_paths
+        val_hand_image_paths += _val_hand_image_paths
+        
+        train_labels = np.concatenate([train_labels, _train_labels])
+		train_labels = train_labels.astype(np.int32)
+        val_labels = np.concatenate([val_labels, _val_labels])
+		val_labels = val_labels.astype(np.int32)
+    
+    # testing data
+    for x in left_right:
+        if with_head=True:
+            _test_head_image_paths, _test_hand_image_paths, _test_labels = load_examples(image_folder=image_folder, label_folder=label_folder, data_type='test', label_type=label_type, hand_type=hand_type, with_head=True)           
+            test_head_image_paths += _test_head_image_paths
+        else:
+            _test_hand_image_paths, _test_labels = load_examples(image_folder=image_folder, label_folder=label_folder, data_type='test', label_type=label_type, hand_type=hand_type, with_head=False)
+        
+        test_hand_image_paths += _test_hand_image_paths
+        test_labels = np.concatenate([test_labels, _test_labels])
+		test_labels = test_labels.astype(np.int32)
+
+    
+    return train_head_image_paths, train_hand_image_paths, train_labels, \
+           val_head_image_paths, val_hand_image_paths, val_labels, \
+           test_head_image_paths, test_hand_image_paths, test_labels
+		   
+def load_image(image_folder='dataset/frames/', data_type='train', label_type='obj', image_type = 'left'):
+    
     if image_type == 'left':
         image_type = 'Lhand'
     elif image_type == 'right':
@@ -18,41 +54,36 @@ def load_image_paths(image_folder_path='dataset/frames/',
     
     image_paths = []
     
-    # splitted the data to train and test.
+    # training and testing
     if data_type == 'train':
-        index, _ = gen_index(setting_index=0)
+        index, _ = number(index=0)
     elif data_type == 'test':
-        _, index = gen_index(setting_index=0)
+        _, index = number(index=0)
         
-        # The given `split_id` of image and label in test data are not consistant.
-        # e.g. "dataset/frames/test/lab/1" <=> "dataset/labels/lab/xxx_xxx*5*.npy"
-        # Based on this example, the generated test `split_id` will started from *5*,
-        # we need to let `split_id` start from *1*.
         split_num = {'lab': 0, 'office': 0, 'house': 0}
         
-        for tup in index:
-            scene_type = tup[0]
+        for x in index:
+            scene_type = x[0]
             split_num[scene_type] += 1
             
-        for i, tup in enumerate(index):
-            scene_type, split_id = tup
+        for i, x in enumerate(index):
+            scene_type, split_id = x
             tmp_split_id = split_id % split_num[scene_type] 
             split_id = tmp_split_id if tmp_split_id > 0 else split_num[scene_type]
             index[i] = (scene_type, split_id) 
 
-    # Load image paths.
-    for tup in index:
-        scene_type, split_id = tup
-        target_folder_path = os.path.join(image_folder_path, data_type, scene_type, str(split_id), image_type)
+    for x in index:
+        scene_type, split_id = x
+        target_folder_path = os.path.join(image_folder, data_type, scene_type, str(split_id), image_type)
         file_names = os.listdir(target_folder_path)
-        file_names = sorted(file_names, key=lambda x: int(re.sub('\D', '', x)))
         image_paths.extend([os.path.join(target_folder_path, file_name) for file_name in file_names])
         
     return image_paths
-def gen_index(setting_index):
+	
+def number(index):
     train_index=[]
     test_index =[]
-    if setting_index == 0:
+    if index == 0:
         for i in range(1,9):
             if i <= 4:
                 train_index.append(('lab',i))
@@ -68,7 +99,7 @@ def gen_index(setting_index):
                 train_index.append(('house',i))
             else:
                 test_index.append(('house',i))
-    elif setting_index == 1:
+    elif index == 1:
         for i in range(1,9):
             train_index.append(('lab',i))
         for i in range(1,7):
@@ -82,26 +113,19 @@ def gen_index(setting_index):
 
 
         
-def load_labels(label_folder_path='dataset/labels',  
-                data_type='train',
-                label_type='obj',
-                hand_type = 'left'):
-    """ Note that we do not have labels for head images. """
+def load_labels(label_folder='dataset/labels', data_type='train', label_type='obj', hand_type = 'left'):
     
     labels = []
     
     # splitted the data to train and test.
     if data_type == 'train':
-        index, _ = gen_index(setting_index=0)
+        index, _ = number(index=0)
     elif data_type == 'test':
-        _, index = gen_index(setting_index=0)
+        _, index = number(index=0)
 
-    # Load labels
-    for tup in index:
-        scene_type, split_id = tup
-        label_npy_path = os.path.join(label_folder_path, scene_type, 
-                                      '{}_{}{}.npy'.format(label_type, hand_type, split_id))
-        
+    for x in index:
+        scene_type, split_id = x
+        label_npy_path = os.path.join(label_folder, scene_type, '{}_{}{}.npy'.format(label_type, hand_type, split_id))
         label_npy = np.load(label_npy_path)
         labels.append(label_npy)
 
@@ -109,29 +133,14 @@ def load_labels(label_folder_path='dataset/labels',
     
     return labels
 
-def load_examples(image_folder_path='dataset/frames/',   
-                  label_folder_path='dataset/labels',   
-                  data_type='train',
-                  label_type='obj',
-                  hand_type='left',
-                  with_head=False):
+def load_examples(image_folder='dataset/frames/', label_folder='dataset/labels', data_type='train', label_type='obj', hand_type='left', with_head=False):
     
-    hand_image_paths = load_image_paths(image_folder_path=image_folder_path, 
-                                        data_type=data_type, 
-                                        label_type=label_type,
-                                        image_type=hand_type)
+    hand_image_paths = load_image(image_folder=image_folder, data_type=data_type, label_type=label_type, image_type=hand_type)
     
     if with_head:
-        head_image_paths = load_image_paths(image_folder_path=image_folder_path, 
-                                        data_type=data_type, 
-                                        label_type=label_type,
-                                        image_type='head')
+        head_image_paths = load_image(image_folder=image_folder, data_type=data_type, label_type=label_type, image_type='head')
     
-    labels = load_labels(label_folder_path=label_folder_path,
-                         data_type=data_type,
-                         label_type=label_type,
-                         hand_type=hand_type)
-    
+    labels = load_labels(label_folder=label_folder, data_type=data_type, label_type=label_type, hand_type=hand_type)
     labels = labels.astype(np.int32)
     
     if with_head:
@@ -139,7 +148,7 @@ def load_examples(image_folder_path='dataset/frames/',
     else:
         return hand_image_paths, labels
     
-def my_train_test_split(image_paths, labels, test_size=0.2):
+def split(image_paths, labels, test_size=0.2):
     num_lab = 0
     num_office = 0
     num_house = 0
@@ -168,111 +177,9 @@ def my_train_test_split(image_paths, labels, test_size=0.2):
     house_train_size = round((1 - test_size)*num_house)
     
     train_image_paths = lab_image_paths[:lab_train_size] + office_image_paths[:office_train_size] + house_image_paths[:house_train_size]
-    train_labels = np.concatenate([lab_labels[:lab_train_size],
-                                  office_labels[:office_train_size],
-                                  house_labels[:house_train_size]])
+    train_labels = np.concatenate([lab_labels[:lab_train_size], office_labels[:office_train_size], house_labels[:house_train_size]])
     
     test_image_paths = lab_image_paths[lab_train_size:] + office_image_paths[office_train_size:] + house_image_paths[house_train_size:]
-    test_labels = np.concatenate([lab_labels[lab_train_size:],
-                                  office_labels[office_train_size:],
-                                  house_labels[house_train_size:]])
+    test_labels = np.concatenate([lab_labels[lab_train_size:], office_labels[office_train_size:], house_labels[house_train_size:]])
     
     return train_image_paths, test_image_paths, train_labels, test_labels
-
-def load_dataset(image_folder_path='dataset/frames/',   
-                 label_folder_path='dataset/labels',   
-                 label_type='obj',
-                 hand_types=['left', 'right'],
-                 with_head=False,
-                 validation_split_ratio=0.2):
-    
-    train_head_image_paths, train_hand_image_paths, train_labels = [], [], np.array([])
-    val_head_image_paths, val_hand_image_paths, val_labels = [], [], np.array([])
-    test_head_image_paths, test_hand_image_paths, test_labels = [], [], np.array([])
-    
-    # -------------------------
-    # Load training data
-    # -------------------------
-    for hand_type in hand_types:
-        if with_head:
-            _head_image_paths, _hand_image_paths, _labels = load_examples(image_folder_path=image_folder_path,
-                                                                          label_folder_path=label_folder_path,
-                                                                          data_type='train',
-                                                                          label_type=label_type,
-                                                                          hand_type=hand_type,
-                                                                          with_head=True)
-            
-            # train_test_split for head images
-            _train_head_image_paths, _val_head_image_paths, _, _ = \
-                my_train_test_split(_head_image_paths, _labels, test_size=validation_split_ratio)
-                
-            train_head_image_paths += _train_head_image_paths
-            val_head_image_paths += _val_head_image_paths
-            
-        else:
-            _hand_image_paths, _labels = load_examples(image_folder_path=image_folder_path,
-                                                       label_folder_path=label_folder_path,
-                                                       data_type='train',
-                                                       label_type=label_type,
-                                                       hand_type=hand_type,
-                                                       with_head=False)
-        
-        # train_test_split for hand images
-        _train_hand_image_paths, _val_hand_image_paths, _train_labels, _val_labels = \
-            my_train_test_split(_hand_image_paths, _labels, test_size=validation_split_ratio)
-            
-        train_hand_image_paths += _train_hand_image_paths
-        val_hand_image_paths += _val_hand_image_paths
-        
-        train_labels = np.concatenate([train_labels, _train_labels])
-        val_labels = np.concatenate([val_labels, _val_labels])
-    
-    # -------------------------
-    # Load testing data
-    # -------------------------
-    for hand_type in hand_types:
-        if with_head:
-            _test_head_image_paths, _test_hand_image_paths, _test_labels = load_examples(image_folder_path=image_folder_path,
-                                                                                         label_folder_path=label_folder_path,
-                                                                                         data_type='test',
-                                                                                         label_type=label_type,
-                                                                                         hand_type=hand_type,
-                                                                                         with_head=True)
-            
-            test_head_image_paths += _test_head_image_paths
-            
-        else:
-            _test_hand_image_paths, _test_labels = load_examples(image_folder_path=image_folder_path,
-                                                                 label_folder_path=label_folder_path,
-                                                                 data_type='test',
-                                                                 label_type=label_type,
-                                                                 hand_type=hand_type,
-                                                                 with_head=False)
-        
-        test_hand_image_paths += _test_hand_image_paths
-        test_labels = np.concatenate([test_labels, _test_labels])
-    
-    # -------------------------
-    # Convert label to int
-    # -------------------------
-    train_labels = train_labels.astype(np.int32)
-    val_labels = val_labels.astype(np.int32)
-    test_labels = test_labels.astype(np.int32)
-    
-    
-    print('-'*100)
-    print('[Train (Head)] number of image paths: {}'.format(len(train_head_image_paths)))
-    print('[Train (Hand)] number of image paths: {}'.format(len(train_hand_image_paths)))
-    print('[Train (Label)] number of labels: {}'.format(len(train_labels)))
-    print('-'*100)
-    print('[Validation (Head)] number of image paths: {}'.format(len(val_head_image_paths)))
-    print('[Validation (Hand)] number of image paths: {}'.format(len(val_hand_image_paths)))
-    print('[Validation (Label)] number of labels: {}'.format(len(val_labels)))
-    print('-'*100)
-    print('[Test (Head)] number of image paths: {}'.format(len(test_head_image_paths)))
-    print('[Test (Hand)] number of image paths: {}'.format(len(test_hand_image_paths)))
-    print('[Test (Label)] number of labels: {}'.format(len(test_labels)))
-    
-    return train_head_image_paths, train_hand_image_paths, train_labels, \
-           val_head_image_paths, val_hand_image_paths, val_labels, \
-           test_head_image_paths, test_hand_image_paths, test_labels
