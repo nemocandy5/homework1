@@ -1,6 +1,6 @@
 # 靳文綺 <span style="color:red">(106062563)</span>
 
-#Homework 1: Deep Classification
+#Homework 1: Object Classification
 
 ## Overview
 I used VGG-16 model with pre-trained model to implement this project about object classification with TensorFlow.
