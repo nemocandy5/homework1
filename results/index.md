@@ -18,7 +18,6 @@ I used VGG-16 model with pre-trained model to implement this project about objec
 * tensorflow
 * tensorflow.contrib.slim
 * numpy
-* tqdm
 
 
 ## Implementation
