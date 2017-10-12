@@ -33,7 +33,7 @@ I used VGG-16 model with pre-trained model to implement this project about objec
 ### The accuracy of object classification.
 <table border=1>
 <tr>
-The testing accuracy is **0.609%**
+The testing accuracy is `0.609%`
 </tr>
 
 <tr>
