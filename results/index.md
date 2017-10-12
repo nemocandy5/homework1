@@ -3,20 +3,15 @@
 #Homework 1: Deep Classification
 
 ## Overview
-The project is related to 
-> Using VGG-16 network to implement this project. The classification task we want to do is object categories.
+I used VGG-16 model with pre-trained model to implement this project about object classification with TensorFlow.
 
 
-## Implementation
-1. load data
-	* I wrote in data_loader.py
-	* The data size is large, so I resize the data and named dataset. Because this homework just want to classify the object captured by HandCam, 
- some images we won't use. So we can take them off.
-2. train with VGG-16 network
-	* I writed in train_vgg_16.py
-	* I download the pre-trained model of VGG-16 (vgg_16.ckpt) to use. I remove the last fully connected layer and replace it with our own.
-The output size is 24 (object categories).
-	* Then we want to fine-tune the entire model.
+## Environment
+* OS: Ubuntu 16.04.2 LTS
+* Anaconda (version 1.6.3)
+* GPU: Nvidia GeForce GTX TITAN X
+* Cuda 8.0
+* Python 3.6.2
 
 
 ## Installation
@@ -25,21 +20,25 @@ The output size is 24 (object categories).
 * numpy
 * tqdm
 
-### Results
 
+## Implementation
+1. Load data
+- [`data_loader.py`]: This code is for loading training, validation, and testing data. The data size is large, so I resized the data and named dataset. Because this homework just want to classify the object captured by HandCam, some images we won't use. So we can take them off.
+
+2. Train with VGG-16 network
+- [`train_vgg_16.py`]:I download the pre-trained model of VGG-16 (vgg_16.ckpt) to use. After downloading, I put this model in folder model/. The architecture of our model is same as standard VGG-16. I remove the last fully connected layer and replace it with our own. The output size is 24 (object categories).
+
+
+## Results
+### The accuracy of object classification.
 <table border=1>
 <tr>
-
-After training and testing, the testing accuracy is 0.6090325610519725.
-
+The testing accuracy is **0.609%**
 </tr>
 
 <tr>
-
 <img src="results.png" alt="results" style="float:middle;">
-
 </tr>
-
 </table>
 
 
